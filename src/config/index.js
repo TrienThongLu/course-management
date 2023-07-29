@@ -1,15 +1,24 @@
 import mongoose from "mongoose";
 
-const url =
-  "mongodb+srv://thongluongweb:nzIIKYQEIe9KHznO@cluster0.0p8jrsm.mongodb.net/School?retryWrites=true&w=majority";
+const url = "mongodb://127.0.0.1/ExpressJS";
 
 const connect = async () => {
   try {
     mongoose.set("strictQuery", false);
-    await mongoose.connect(url, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    return mongoose.connect(
+      url,
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      },
+      (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("connect database success");
+        }
+      }
+    );
   } catch (e) {
     console.log("connect database fail");
   }

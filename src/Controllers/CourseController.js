@@ -15,10 +15,10 @@ class CourseController {
 
   async getCourse(req, res) {
     await CourseModel.find({ _id: { $in: req.body.ids } })
-      .then((course) => {
+      .then((courses) => {
         return res.json({
           msg: "Retrieved",
-          course: course,
+          course: courses,
         });
       })
       .catch((e) => {
@@ -37,28 +37,35 @@ class CourseController {
   }
 
   async create(req, res) {
-    const errors = validationResult(req);
+    try {
+      const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
-      return;
-    }
+      if (!errors.isEmpty()) {
+        res.status(422).json({ errors: errors.array() });
+        return;
+      }
 
-    const newCourse = new CourseModel(req.body);
-    await newCourse
-      .save()
-      .then(() => {
-        return res.json({
-          msg: "Created",
-        });
-      })
-      .catch((e) => {
-        if (e.code === 11000) {
+      const newCourse = new CourseModel(req.body);
+      await newCourse
+        .save()
+        .then(() => {
           return res.json({
-            error: "Name already exists",
+            msg: "Created",
           });
-        }
+        })
+        .catch((e) => {
+          if (e.code === 11000) {
+            return res.status(400).json({
+              error: "Name already exists",
+            });
+          }
+        });
+    } catch (error) {
+      console.log(error);
+      return res.json({
+        error,
       });
+    }
   }
 
   async update(req, res) {

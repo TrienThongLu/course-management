@@ -5,7 +5,6 @@ const ObjectId = mongoose.ObjectId;
 
 const User = new Schema(
   {
-    _id: { type: ObjectId },
     username: { type: String, index: { unique: true } },
     password: { type: String },
     refreshToken: { type: String },
@@ -16,4 +15,4 @@ const User = new Schema(
   }
 );
 
-export default mongoose.model("User", User);
+export default mongoose.model("Users", User);
