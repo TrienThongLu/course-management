@@ -1,6 +1,5 @@
 import CourseModel from "../Models/CourseModel.js";
 import UserModel from "../Models/UserModel.js";
-import { validationResult } from "express-validator";
 
 class CourseController {
   async getAllCourse(req, res) {
@@ -38,13 +37,6 @@ class CourseController {
 
   async create(req, res) {
     try {
-      const errors = validationResult(req);
-
-      if (!errors.isEmpty()) {
-        res.status(422).json({ errors: errors.array() });
-        return;
-      }
-
       const newCourse = new CourseModel(req.body);
       await newCourse
         .save()

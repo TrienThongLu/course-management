@@ -1,41 +1,48 @@
 import UserModel from "../Models/UserModel.js";
 import jwtService from "../utils/jwtService.js";
 import bcrypt from "bcrypt";
+import createHttpError from "http-errors";
 
 const saltRounds = 5;
 
 class UserController {
-  async getAllUser(req, res) {
-    await UserModel.find({})
-      .then((users) => {
-        return res.json(users);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+  async getAllUser(req, res, next) {
+    try {
+      await UserModel.find({})
+        .then((users) => {
+          return res.json(users);
+        })
+        .catch((e) => {
+          next(createHttpError[404]("User Not Found"));
+        });
+    } catch (error) {
+      next(createHttpError[500](error.message || error));
+    }
   }
 
   async register(req, res) {
-    const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
-    const postedUser = {
-      username: req.body.username,
-      password: hashPassword,
-    };
-    const newUser = new UserModel(postedUser);
-    await newUser
-      .save()
-      .then(() => {
-        return res.json({
-          msg: "Registered",
-        });
-      })
-      .catch((e) => {
-        if (e.code === 11000) {
+    try {
+      const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
+      const postedUser = {
+        username: req.body.username,
+        password: hashPassword,
+      };
+      await UserModel.create(postedUser)
+        .then(() => {
           return res.json({
-            error: "Name already exists",
+            msg: "Registered",
           });
-        }
-      });
+        })
+        .catch((e) => {
+          if (e.code === 11000) {
+            return res.json({
+              error: "Name already exists",
+            });
+          }
+        });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async login(req, res) {
