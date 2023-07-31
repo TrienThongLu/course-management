@@ -5,7 +5,7 @@ const ObjectId = mongoose.ObjectId;
 
 const User = new Schema(
   {
-    username: { type: String, index: { unique: true }, required: true },
+    username: { type: String, index: { unique: true }, required: true, lowercase: true },
     password: { type: String, required: true },
     refreshToken: { type: String },
     courseIds: [{ type: String }],
