@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import { db } from "../../src/config/index.js";
 
 const Schema = mongoose.Schema;
-const ObjectId = mongoose.ObjectId;
+// const ObjectId = mongoose.ObjectId;
 
 const User = new Schema(
   {
@@ -15,4 +16,4 @@ const User = new Schema(
   }
 );
 
-export default mongoose.model("Users", User);
+export default db.userDB.model("Users", User);

@@ -2,19 +2,17 @@ import UserModel from "../Models/UserModel.js";
 import jwtService from "../utils/jwtService.js";
 import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
+import UserService from "../Services/UserService.js";
 
 const saltRounds = 5;
 
 class UserController {
   async getAllUser(req, res, next) {
     try {
-      await UserModel.find({})
-        .then((users) => {
-          return res.json(users);
-        })
-        .catch((e) => {
-          next(createHttpError[404]("User Not Found"));
-        });
+      const users = await UserService.fin(req.query.name);
+      return res.status(200).json({
+        users,
+      });
     } catch (error) {
       next(createHttpError[500](error.message || error));
     }
@@ -78,16 +76,10 @@ class UserController {
     user.refreshToken = refreshTokenGenerator.refreshToken;
     await user.save();
 
-    return res
-      .cookie(
-        `refreshToken`,
-        refreshTokenGenerator.refreshToken,
-        refreshTokenGenerator.options
-      )
-      .json({
-        msg: "login successfully",
-        token: token,
-      });
+    return res.cookie(`refreshToken`, refreshTokenGenerator.refreshToken, refreshTokenGenerator.options).json({
+      msg: "login successfully",
+      token: token,
+    });
   }
 
   async refresh(req, res) {

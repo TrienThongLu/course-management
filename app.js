@@ -1,13 +1,10 @@
 import * as dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
+dotenv.config();
 import express from "express";
 import cookieParser from "cookie-parser";
 import route from "./src/Routers/router.js";
-import db from "./src/config/index.js";
 
 const app = express();
-
-db.connect();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -15,6 +12,7 @@ app.use(cookieParser());
 
 route(app);
 
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   res.status(status).json({

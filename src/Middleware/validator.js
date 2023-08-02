@@ -5,10 +5,7 @@ let validateCourseInputData = () => {
 };
 
 let validateRegisterInputData = () => {
-  return [
-    body("username", "Length must > 6").isLength({ min: 6 }),
-    body("password", "Length must > 6").isLength({ min: 6 }),
-  ];
+  return [body("username", "Length must > 6").isLength({ min: 6 }), body("password", "Length must > 6").isLength({ min: 6 })];
 };
 
 let validate = {
