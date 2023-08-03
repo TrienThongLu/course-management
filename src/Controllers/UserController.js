@@ -9,7 +9,7 @@ const saltRounds = 5;
 class UserController {
   async getAllUser(req, res, next) {
     try {
-      const users = await UserService.fin(req.query.name);
+      const users = await UserService.find(req.query.name);
       return res.status(200).json({
         users,
       });
@@ -20,66 +20,50 @@ class UserController {
 
   async register(req, res) {
     try {
-      const hashPassword = bcrypt.hashSync(req.body.password, saltRounds);
-      const postedUser = {
-        username: req.body.username,
-        password: hashPassword,
-      };
-      await UserModel.create(postedUser)
-        .then(() => {
-          return res.json({
-            msg: "Registered",
-          });
-        })
-        .catch((e) => {
-          if (e.code === 11000) {
-            return res.json({
-              error: "Name already exists",
-            });
-          }
-        });
+      const newUser = await UserService.create(req.body);
+      res.status(201).json({
+        newUser,
+      });
     } catch (error) {
       console.log(error);
     }
   }
 
-  async login(req, res) {
-    const user = await UserModel.findOne({
-      username: req.body.username,
-    });
-
-    if (!user) {
-      return res.json({
-        msg: "User not found",
-      });
+  async login(req, res, next) {
+    try {
+      const user = await UserService.login(req.body.username, req.body.password);
+    } catch (error) {
+      next(createHttpError[error.status || 500](error.message || error));
     }
-
-    const isSamePassword = bcrypt.compareSync(req.body.password, user.password);
-    if (!isSamePassword) {
-      return res.json({
-        msg: "Wrong password",
-      });
-    }
-
-    const token = await jwtService.generateToken({
-      username: user.username,
-    });
-
-    const refreshTokenGenerator = await jwtService.generateRefreshToken(token);
-
-    if (!token || !refreshTokenGenerator) {
-      return res.json({
-        msg: "Tokens error",
-      });
-    }
-
-    user.refreshToken = refreshTokenGenerator.refreshToken;
-    await user.save();
-
-    return res.cookie(`refreshToken`, refreshTokenGenerator.refreshToken, refreshTokenGenerator.options).json({
-      msg: "login successfully",
-      token: token,
-    });
+    // const user = await UserModel.findOne({
+    //   username: req.body.username,
+    // });
+    // if (!user) {
+    //   return res.json({
+    //     msg: "User not found",
+    //   });
+    // }
+    // const isSamePassword = bcrypt.compareSync(req.body.password, user.password);
+    // if (!isSamePassword) {
+    //   return res.json({
+    //     msg: "Wrong password",
+    //   });
+    // }
+    // const token = await jwtService.generateToken({
+    //   username: user.username,
+    // });
+    // const refreshTokenGenerator = await jwtService.generateRefreshToken(token);
+    // if (!token || !refreshTokenGenerator) {
+    //   return res.json({
+    //     msg: "Tokens error",
+    //   });
+    // }
+    // user.refreshToken = refreshTokenGenerator.refreshToken;
+    // await user.save();
+    // return res.cookie(`refreshToken`, refreshTokenGenerator.refreshToken, refreshTokenGenerator.options).json({
+    //   msg: "login successfully",
+    //   token: token,
+    // });
   }
 
   async refresh(req, res) {

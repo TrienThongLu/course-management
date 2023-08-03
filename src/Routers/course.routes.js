@@ -9,7 +9,7 @@ const router = express.Router();
 router.get("/", CourseController.getAllCourse);
 router.get("/ids", CourseController.getCourse);
 router.get("/:id", CourseController.findOne);
-router.post("/", validator.validateCourseInputData(), checkValidation.checkValidation, CourseController.create);
+router.post("/", validator.validateCourseData(), checkValidation.checkValidation, CourseController.create);
 router.put("/", CourseController.update);
 router.delete("/:_id", CourseController.delete);
 
