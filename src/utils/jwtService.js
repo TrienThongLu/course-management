@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import randtoken from "rand-token";
 import { promisify } from "util";
+import createHttpError from "http-errors";
 
 const sign = promisify(jwt.sign).bind(jwt);
 const verify = promisify(jwt.verify).bind(jwt);
@@ -21,7 +22,6 @@ const generateToken = async (data) => {
       }
     );
   } catch (error) {
-    console.log(`${error}`);
     return null;
   }
 };
@@ -38,7 +38,6 @@ const generateRefreshToken = async (token) => {
       options,
     };
   } catch (error) {
-    console.log(`${error}`);
     return null;
   }
 };
@@ -49,7 +48,6 @@ const verifyToken = async (data) => {
   try {
     return await verify(data, tokenSecret);
   } catch (error) {
-    console.log(`${error}`);
     return null;
   }
 };
@@ -62,7 +60,6 @@ const decodeToken = async (data) => {
       ignoreExpiration: true,
     });
   } catch (error) {
-    console.log(`${error}`);
     return null;
   }
 };

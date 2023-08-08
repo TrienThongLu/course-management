@@ -30,6 +30,7 @@
     "lodash": "^4.17.21",
     "mongoose": "^6.8.3",
     "node": "^19.3.0",
-    "rand-token": "^1.0.1"
+    "rand-token": "^1.0.1",
+    "redis": "^4.6.7"
   }
 }

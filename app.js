@@ -1,5 +1,7 @@
 import * as dotenv from "dotenv";
 dotenv.config();
+import redis from "./src/config/redis_connection.js";
+redis.config();
 import express from "express";
 import cookieParser from "cookie-parser";
 import route from "./src/Routers/router.js";

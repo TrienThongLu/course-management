@@ -14,56 +14,31 @@ class UserController {
         users,
       });
     } catch (error) {
-      next(createHttpError[500](error.message || error));
+      next(createHttpError[error.status || 500](error.message || error));
     }
   }
 
-  async register(req, res) {
+  async register(req, res, next) {
     try {
       const newUser = await UserService.create(req.body);
       res.status(201).json({
         newUser,
       });
     } catch (error) {
-      console.log(error);
+      next(createHttpError[error.status || 500](error.message || error));
     }
   }
 
   async login(req, res, next) {
     try {
-      const user = await UserService.login(req.body.username, req.body.password);
+      const { token } = await UserService.login(req.body.username, req.body.password);
+      return res.json({
+        msg: "login successfully",
+        token: token,
+      });
     } catch (error) {
       next(createHttpError[error.status || 500](error.message || error));
     }
-    // const user = await UserModel.findOne({
-    //   username: req.body.username,
-    // });
-    // if (!user) {
-    //   return res.json({
-    //     msg: "User not found",
-    //   });
-    // }
-    // const isSamePassword = bcrypt.compareSync(req.body.password, user.password);
-    // if (!isSamePassword) {
-    //   return res.json({
-    //     msg: "Wrong password",
-    //   });
-    // }
-    // const token = await jwtService.generateToken({
-    //   username: user.username,
-    // });
-    // const refreshTokenGenerator = await jwtService.generateRefreshToken(token);
-    // if (!token || !refreshTokenGenerator) {
-    //   return res.json({
-    //     msg: "Tokens error",
-    //   });
-    // }
-    // user.refreshToken = refreshTokenGenerator.refreshToken;
-    // await user.save();
-    // return res.cookie(`refreshToken`, refreshTokenGenerator.refreshToken, refreshTokenGenerator.options).json({
-    //   msg: "login successfully",
-    //   token: token,
-    // });
   }
 
   async refresh(req, res) {

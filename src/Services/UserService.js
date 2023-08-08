@@ -1,17 +1,17 @@
 import UserModel from "../Models/UserModel.js";
-// import jwtService from "../utils/jwtService.js";
+import jwtService from "../utils/jwtService.js";
 import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
-
-const saltRounds = 5;
 
 class UserService {
   async find(rawName) {
     const name = rawName || "";
     const users = await UserModel.find({
-      username: new RegExp("^" + name + "$", "i"),
+      username: {
+        $regex: name,
+      },
     });
-
+    console.log(name, users);
     return users;
   }
 
@@ -35,10 +35,24 @@ class UserService {
     if (!isSamePassword) {
       throw new createHttpError[404]("Wrong password");
     }
+
+    const token = await jwtService.generateToken({
+      username: user.username,
+    });
+    const refreshTokenGenerator = await jwtService.generateRefreshToken(token);
+    if (!token || !refreshTokenGenerator) {
+      throw new createHttpError[500]("Token Error");
+    }
+    await user.save();
+    return {
+      refreshTokenGenerator,
+      token,
+    };
   }
 
   async create(data) {
-    const hashPassword = bcrypt.hashSync(data.password, saltRounds);
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = bcrypt.hashSync(data.password, salt);
     const newUser = await UserModel.create({
       username: data.username,
       password: hashPassword,
