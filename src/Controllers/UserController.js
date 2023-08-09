@@ -3,6 +3,7 @@ import jwtService from "../utils/jwtService.js";
 import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
 import UserService from "../Services/UserService.js";
+import redis from "../config/redis_connection.js";
 
 const saltRounds = 5;
 
@@ -31,42 +32,45 @@ class UserController {
 
   async login(req, res, next) {
     try {
-      const { token } = await UserService.login(req.body.username, req.body.password);
-      return res.json({
-        msg: "login successfully",
-        token: token,
-      });
+      const { token, refreshTokenGenerator } = await UserService.login(
+        req.body.username,
+        req.body.password
+      );
+      return res
+        .cookie(`refreshToken`, refreshTokenGenerator.refreshToken, refreshTokenGenerator.options)
+        .json({
+          msg: "login successfully",
+          token: token,
+        });
     } catch (error) {
       next(createHttpError[error.status || 500](error.message || error));
     }
   }
 
   async refresh(req, res) {
-    const token = req.headers.authorization.split(" ")[1];
-    const userData = await jwtService.decodeToken(token);
-    const refreshToken = req.body.refreshToken;
-    if (!userData || !refreshToken) {
+    const refreshToken = req.cookies.refreshToken;
+    const userData = await jwtService.decodeRefreshToken(refreshToken);
+    if (!userData.userId || !refreshToken) {
       return res.status(404).json({
         msg: "Tokens error",
       });
     }
 
-    const username = userData.data.username;
-    const user = await UserModel.findOne({ username: username });
-    if (!user) {
+    const redisRFToken = await redis.client.get(userData.userId);
+    if (!redisRFToken) {
       return res.status(404).json({
-        msg: "User not found",
+        msg: "Tokens error",
       });
-    }
-
-    if (refreshToken !== user.refreshToken) {
-      return res.status(404).json({
-        msg: "Refresh token error",
-      });
+    } else {
+      if (redisRFToken !== refreshToken) {
+        return res.status(404).json({
+          msg: "Tokens error",
+        });
+      }
     }
 
     const newToken = await jwtService.generateToken({
-      username: username,
+      id: userData.id,
     });
 
     return res.json({

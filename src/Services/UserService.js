@@ -2,6 +2,7 @@ import UserModel from "../Models/UserModel.js";
 import jwtService from "../utils/jwtService.js";
 import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
+import redis from "../config/redis_connection.js";
 
 class UserService {
   async find(rawName) {
@@ -37,12 +38,26 @@ class UserService {
     }
 
     const token = await jwtService.generateToken({
-      username: user.username,
+      id: user.id,
     });
-    const refreshTokenGenerator = await jwtService.generateRefreshToken(token);
+    const refreshTokenGenerator = await jwtService.generateRefreshToken({
+      id: user.id,
+    });
     if (!token || !refreshTokenGenerator) {
       throw new createHttpError[500]("Token Error");
     }
+    redis.client.set(
+      user.id.toString(),
+      refreshTokenGenerator.refreshToken,
+      {
+        EX: 60,
+      },
+      (err, response) => {
+        if (err) {
+          throw new createHttpError[500]("Refresh token error");
+        }
+      }
+    );
     await user.save();
     return {
       refreshTokenGenerator,

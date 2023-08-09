@@ -5,15 +5,14 @@ import createHttpError from "http-errors";
 
 const sign = promisify(jwt.sign).bind(jwt);
 const verify = promisify(jwt.verify).bind(jwt);
+const tokenSecret = process.env.ACCESS_TOKEN_SECRET;
+const tokenLife = process.env.ACCESS_TOKEN_LIFE;
 
-const generateToken = async (data) => {
-  const tokenSecret = process.env.ACCESS_TOKEN_SECRET;
-  const tokenLife = process.env.ACCESS_TOKEN_LIFE;
-
+const generateToken = async (userData) => {
   try {
     return await sign(
       {
-        data,
+        userId: userData.id,
       },
       tokenSecret,
       {
@@ -26,9 +25,18 @@ const generateToken = async (data) => {
   }
 };
 
-const generateRefreshToken = async (token) => {
+const generateRefreshToken = async (userData) => {
   try {
-    const refreshToken = randtoken.generate(token.length * 2);
+    const refreshToken = await sign(
+      {
+        userId: userData.id,
+      },
+      tokenSecret,
+      {
+        algorithm: "HS256",
+        expiresIn: "60s",
+      }
+    );
     const options = {
       httpOnly: true,
       expires: new Date(Date.now() + parseInt(process.env.REFRESH_TOKEN_LIFE)),
@@ -57,8 +65,19 @@ const decodeToken = async (data) => {
 
   try {
     return await verify(data, tokenSecret, {
-      ignoreExpiration: true,
+      ignoreExpiration: false,
     });
+  } catch (error) {
+    return null;
+  }
+};
+
+const decodeRefreshToken = async (token) => {
+  try {
+    const rfdata = await verify(token, tokenSecret, {
+      ignoreExpiration: false,
+    });
+    return rfdata;
   } catch (error) {
     return null;
   }
@@ -69,4 +88,5 @@ export default {
   generateRefreshToken,
   verifyToken,
   decodeToken,
+  decodeRefreshToken,
 };

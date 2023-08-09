@@ -19,11 +19,6 @@ router.post(
   checkValidation.checkValidation,
   UserController.login
 );
-router.post(
-  "/refresh",
-  validator.validateRegisterData(),
-  checkValidation.checkValidation,
-  UserController.refresh
-);
+router.post("/refresh", UserController.refresh);
 
 export default router;
