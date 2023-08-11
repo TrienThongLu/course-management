@@ -50,7 +50,7 @@ class UserController {
   async refresh(req, res) {
     const refreshToken = req.cookies.refreshToken;
     const userData = await jwtService.decodeRefreshToken(refreshToken);
-    if (!userData.userId || !refreshToken) {
+    if (!userData || !userData.userId || !refreshToken) {
       return res.status(404).json({
         msg: "Tokens error",
       });
