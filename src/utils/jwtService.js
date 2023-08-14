@@ -7,6 +7,7 @@ const sign = promisify(jwt.sign).bind(jwt);
 const verify = promisify(jwt.verify).bind(jwt);
 const tokenSecret = process.env.ACCESS_TOKEN_SECRET;
 const tokenLife = process.env.ACCESS_TOKEN_LIFE;
+const rfTokenLife = process.env.REFRESH_TOKEN_LIFE;
 
 const generateToken = async (userData) => {
   try {
@@ -34,7 +35,7 @@ const generateRefreshToken = async (userData) => {
       tokenSecret,
       {
         algorithm: "HS256",
-        expiresIn: "60s",
+        expiresIn: rfTokenLife,
       }
     );
     const options = {

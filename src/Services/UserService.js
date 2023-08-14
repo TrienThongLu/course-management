@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import createHttpError from "http-errors";
 import redis from "../config/redis_connection.js";
 
+const rfTokenLifeRedis = process.env.REFRESH_TOKEN_LIFE_REDIS;
 class UserService {
   async find(rawName) {
     const name = rawName || "";
@@ -24,45 +25,49 @@ class UserService {
   }
 
   async login(username, password) {
-    const user = await UserModel.findOne({
-      username: username,
-    });
+    try {
+      const user = await UserModel.findOne({
+        username: username,
+      });
 
-    if (!user) {
-      throw new createHttpError[404]("Wronng username");
-    }
-
-    const isSamePassword = bcrypt.compareSync(password, user.password);
-    if (!isSamePassword) {
-      throw new createHttpError[404]("Wrong password");
-    }
-
-    const token = await jwtService.generateToken({
-      id: user.id,
-    });
-    const refreshTokenGenerator = await jwtService.generateRefreshToken({
-      id: user.id,
-    });
-    if (!token || !refreshTokenGenerator) {
-      throw new createHttpError[500]("Token Error");
-    }
-    redis.client.set(
-      user.id.toString(),
-      refreshTokenGenerator.refreshToken,
-      {
-        EX: 60,
-      },
-      (err, response) => {
-        if (err) {
-          throw new createHttpError[500]("Refresh token error");
-        }
+      if (!user) {
+        throw new createHttpError[404]("Wronng username");
       }
-    );
-    await user.save();
-    return {
-      refreshTokenGenerator,
-      token,
-    };
+
+      const isSamePassword = bcrypt.compareSync(password, user.password);
+      if (!isSamePassword) {
+        throw new createHttpError[404]("Wrong password");
+      }
+
+      const token = await jwtService.generateToken({
+        id: user.id,
+      });
+      const refreshTokenGenerator = await jwtService.generateRefreshToken({
+        id: user.id,
+      });
+      if (!token || !refreshTokenGenerator) {
+        throw new createHttpError[500]("Token Error");
+      }
+      redis.client.set(
+        user.id.toString(),
+        refreshTokenGenerator.refreshToken,
+        {
+          EX: rfTokenLifeRedis,
+        },
+        (err, response) => {
+          if (err) {
+            throw new createHttpError[500]("Refresh token error");
+          }
+        }
+      );
+      await user.save();
+      return {
+        refreshTokenGenerator,
+        token,
+      };
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async create(data) {
