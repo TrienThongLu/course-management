@@ -13,6 +13,8 @@ const helloo = async (s, t) => {
   }, t);
 };
 
+console.log("vallon");
+
 const run = async () => {
   await hello("a", 2000);
   await hello("b", 2000);
